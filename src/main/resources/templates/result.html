@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>办理进度</title>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<center>
+    <br><br>
+    <h2 style="color:deepskyblue">查询结果</h2>
+    <br><br>
+    <table class="table table-bordered table table-hover" style="width:30rem">
+        <tr>
+            <th>申请卡种</th>
+            <th>申请日期</th>
+            <th>申请状态</th>
+        </tr>
+        <tr th:each="result : ${results}">
+
+            <td th:text="${result.cardType}"></td>
+            <td th:text="${result.date}"></td>
+            <td th:text="${result.state}"></td>
+        </tr>
+    </table>
+</center>
+</body>
+</html>

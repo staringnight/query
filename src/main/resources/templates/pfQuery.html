@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>浦发银行信用卡办理进度查询</title>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <script src="../webjars/jquery/3.2.1/jquery.js"></script>
+</head>
+<body>
+<script>
+    function chageImg() {
+        $('#verImg').attr('src', '/bankQuery/pf/verify_code.jpg?' + Math.floor(Math.random() * 1000000));
+    }
+</script>
+
+<center>
+    <h2 style="color:deepskyblue">办卡进度</h2>
+
+    <span th:if="${error}" th:text="${error}"></span>
+    <form class="form-horizontal" role="form" action="#" th:action="@{/bankQuery/pf/query}" th:object="${user}"
+          method="post">
+        <div class="form-group" style="width:34rem">
+            <div>
+                <label for="card_id_type" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline">证件类型：</label>
+                <select id="card_id_type" style="width: 20rem;display: inline" class="form-control" th:field="*{cardIdType}">
+                    <option value="01">18位身份证</option>
+                    <option value="02">15位身份证</option>
+                    <option value="03">军人证、警官证</option>
+                    <option value="04">台湾居民居住证</option>
+                    <option value="05">港澳或台湾居民通行证</option>
+                    <option value="06">其他证件（特殊号）</option>
+                    <option value="07">香港居民通行证</option>
+                    <option value="08">澳门居民通行证</option>
+                    <option value="09">护照</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group" style="width:34rem">
+            <div>
+                <label for="card_value" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline">证件号码：</label>
+                <input th:field="*{idNo}" style="width: 20rem;display: inline" class="form-control" id="card_value" type="text" maxlength="18"/>
+            </div>
+        </div>
+        <div class="form-group" style="width:34rem">
+            <div>
+                <label for="ver_code" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline" >验证码：</label>
+                <input id="ver_code" class="form-control flat" style="width: 12rem;display: inline" type="text" maxlength="4" th:field="*{verCode}"/>
+                <img  src="/bankQuery/pf/verify_code.jpg" onclick="chageImg()" id="verImg"/>
+            </div>
+
+        </div>
+
+        <div class="form-group">
+            <div>
+                <button type="submit" style="width: 10rem" class="btn btn-primary" id="btn">查询</button>&nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="reset" style="width: 10rem" class="btn btn-warning" value="重置"/>
+            </div>
+        </div>
+    </form>
+</center>
+</body>
+</html>
