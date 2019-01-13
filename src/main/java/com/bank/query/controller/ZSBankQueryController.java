@@ -31,15 +31,15 @@ import java.util.Arrays;
 import java.util.List;
 
 @Controller
-@RequestMapping("bankQuery/jt")
+@RequestMapping("bankQuery/zs")
 @Slf4j
-public class JTBankQueryController {
+public class ZSBankQueryController {
     @Autowired
     private RestTemplate restTemplate;
 
     @RequestMapping("")
-    public String jiaotong(HttpServletRequest request, HttpServletResponse response, Model model) {
-        ResponseEntity exchange = restTemplate.getForEntity("https://creditcardapp.bankcomm.com/member/apply/status/preinquiry.html", String.class);
+    public String zhaoshang(HttpServletResponse response, Model model) {
+        ResponseEntity exchange = restTemplate.getForEntity("https://ccclub.cmbchina.com/mca/MQuery.aspx", String.class);
         HttpHeaders headers = exchange.getHeaders();
         String set_cookie = headers.getFirst(HttpHeaders.SET_COOKIE);
         //response.addCookie(set_cookie);
@@ -51,29 +51,26 @@ public class JTBankQueryController {
             }
         });
         model.addAttribute("user", new User());
-        return "jtQuery";
+        return "zsQuery";
     }
 
-
-
-    @RequestMapping("/verify_code.jpg")
+    @PostMapping("actPwd")
     @ResponseBody
-    public String verCode(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        response.setDateHeader("Expires", 0);
-        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-        response.addHeader("Cache-Control", "post-check=0, pre-check=0");
-        response.setHeader("Pragma", "no-cache");
-        response.setContentType("image/jpeg");
-
-
+    public String actPwd(HttpServletRequest request, HttpServletResponse response, String id_no, String tel, String id_Type) {
         HttpHeaders headers = new HttpHeaders();
         String s = request.getHeader("Cookie");
         headers.add("Cookie", s);
-        ResponseEntity<byte[]> result = restTemplate.exchange("https://creditcardapp.bankcomm.com//member/creimg", HttpMethod.GET, new HttpEntity<byte[]>(headers), byte[].class);
+        headers.add("Host", "ccclub.cmbchina.com");
+        headers.add("Origin", "https://ccclub.cmbchina.com");
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        headers.add("Referer", "https://ccclub.cmbchina.com/mca/MQuery.aspx");
+        String para = "{\"IDType\":\"" + id_Type + "\",\"IDNum\":\"" + id_no + "\",\"TelNo\":\"" + tel + "\"}";
+        HttpEntity<String> requestEntity = new HttpEntity<String>(para, headers);
+        ResponseEntity<String> exchange = restTemplate.exchange("https://ccclub.cmbchina.com/mca/Service/CWAService.asmx/PQS_SendSMSCode", HttpMethod.POST, requestEntity, String.class);
 
-        String set_cookie = result.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        String set_cookie = exchange.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
         //response.addCookie(set_cookie);
-        if (set_cookie!=null) {
+        if (set_cookie != null) {
             String[] cookies = set_cookie.split(";");
             Arrays.stream(cookies).forEach(cookiesString -> {
                 String[] c = cookiesString.split("=");
@@ -82,24 +79,14 @@ public class JTBankQueryController {
                     response.addCookie(new Cookie(c[0].trim(), c[1].trim()));
                 }
             });
+
         }
-
-        byte[] pic = result.getBody();
-
-        OutputStream os = response.getOutputStream();
-        //返回验证码和图片的map
-
-        try {
-            ImageIO.write(createImageFromBytes(pic), "jpg", os);
-        } catch (IOException e) {
-            return "";
-        } finally {
-            if (os != null) {
-                os.flush();
-                os.close();
-            }
+        boolean flag = true;
+        if (exchange.getStatusCode().value() != HttpStatus.OK.value()) {
+            flag = false;
         }
-        return null;
+        String result = "{\"flag\":"+flag+",\"rbody\":"+exchange.getBody()+"}";
+        return result;
     }
 
     @PostMapping("/query")
@@ -108,44 +95,47 @@ public class JTBankQueryController {
         HttpHeaders headers = new HttpHeaders();
         String s = request.getHeader("Cookie");
         headers.add("Cookie", s);
+        headers.add("Host", "xyk.cebbank.com");
+        headers.add("Origin", "https://xyk.cebbank.com");
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.add("Referer", "https://creditcardapp.bankcomm.com/member/apply/status/preinquiry.html");
+        headers.add("Referer", "https://xyk.cebbank.com/home/fz/card-app-status.htm");
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("certNo", user.getIdNo());
-        params.add("vCode", user.getVerCode());
+        params.add("name", user.getName());
+        params.add("id_no", user.getIdNo());
+        params.add("ver_code", user.getVerCode());
+        params.add("card_id_Type", user.getCardIdType());
+        params.add("activity_code", user.getActivityCode());
 
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<MultiValueMap<String, String>>(params, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange("https://creditcardapp.bankcomm.com/member/apply/status/inquiry.html", HttpMethod.POST, requestEntity, String.class);
+        ResponseEntity<String> exchange = restTemplate.exchange("https://xyk.cebbank.com/home/fz/card-app-status-query.htm", HttpMethod.POST, requestEntity, String.class);
         //log.info(exchange.getBody());
-        if (exchange.getStatusCode().value() != HttpStatus.OK.value()){
+        if (exchange.getStatusCode().value() != HttpStatus.OK.value()) {
             model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
-            return "jtQuery";
+            return "zsQuery";
         }
         List<Result> results = new ArrayList<>();
         try {
             Document doc = Jsoup.parse(exchange.getBody());
-            Elements elements = doc.getElementsByClass("searchconc").get(0).getElementsByTag("table").get(0).getElementsByTag("tr");
+            Elements elements = doc.getElementsByClass("borderWrap2").get(0).getElementsByTag("table").get(0).getElementsByTag("tr");
 
             elements.stream().skip(1).forEach(element -> {
                 Elements e = element.getElementsByTag("td");
                 Result result = Result.builder()
-                        .cardType(e.get(0).text().trim())
-                        .date(e.get(1).text().trim())
-                        .state(e.get(2).text().trim())
+                        .cardType(e.get(1).text().trim())
+                        .date(e.get(3).text().trim())
+                        .state(e.get(4).text().trim())
                         .build();
                 results.add(result);
             });
-        }catch (Exception e){
-            //log.error("解析网页出错",e);
+        } catch (Exception e) {
             model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
-            return "pfQuery";
+            return "zsQuery";
         }
-
-        //log.info(results.toString());
-        model.addAttribute("results",results);
+        // log.info(results.toString());
+        model.addAttribute("results", results);
         return "result";
     }
 

@@ -39,7 +39,7 @@ public class GDBankQueryController {
 
     @RequestMapping("")
     public String guangda(HttpServletRequest request, HttpServletResponse response, Model model) {
-        ResponseEntity exchange = restTemplate.getForEntity("https://xyk.cebbank.com/home/usr/logsyn.htm?1939680", Object.class);
+        ResponseEntity exchange = restTemplate.getForEntity("https://xyk.cebbank.com/home/usr/logsyn.htm?1939680", String.class);
         HttpHeaders headers = exchange.getHeaders();
         String set_cookie = headers.getFirst(HttpHeaders.SET_COOKIE);
         //response.addCookie(set_cookie);
@@ -81,7 +81,12 @@ public class GDBankQueryController {
             });
 
         }
-        return exchange.getStatusCode().toString();
+        boolean flag = true;
+        if (exchange.getStatusCode().value() != HttpStatus.OK.value()) {
+            flag = false;
+        }
+        String result = "{\"flag\":"+flag+",\"rbody\":"+exchange.getBody()+"}";
+        return result;
     }
 
     @RequestMapping("/verify_code.jpg")

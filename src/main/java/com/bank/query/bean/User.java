@@ -9,4 +9,5 @@ public class User {
     private String idNo;
     private String verCode;
     private String activityCode;
+    private String tel;
 }

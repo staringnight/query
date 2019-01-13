@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <title>光大银行信用卡办理进度查询</title>
+    <title>招商银行信用卡办理进度查询</title>
     <script src="../../webjars/jquery/3.2.1/jquery.js"></script>
     <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -73,12 +73,12 @@
 
         function getActPwd() {
 
-            var p_url = '/bankQuery/gd/actPwd';
+            var p_url = '/bankQuery/zs/actPwd';
             var card_value = $('#card_value').val();
-            var ver_code = $('#ver_code').val();
+            var tel = $('#tel').val();
             var idType = $('#card_id_type').val();
             var actErr = $("#actErr");
-            if(card_value == "" || ver_code =="" || idType == ""){
+            if(card_value == "" || tel =="" || idType == ""){
                 actErr.val("请先填写信息！");
                 actErr.show();
             }else {
@@ -87,13 +87,13 @@
             $.ajax({
                 type: "POST",
                 url: p_url,
-                data: "id_no=" + card_value + "&ver_code=" + ver_code + "&id_Type=" + idType,
+                data: "id_no=" + card_value + "&tel=" + tel + "&id_Type=" + idType,
                 success: function (msg) {
                     var msgobj= JSON.parse(msg);
                     if(!msgobj.flag){
                         actErr.html("信息填写不正确！");
                         actErr.show();
-                    }else if(msgobj.rbody.flag !=0){
+                    }else if(msgobj.rbody.d[0] !=0){
                         actErr.html("信息填写不正确！");
                         actErr.show();
                     }
@@ -125,38 +125,25 @@
     });
 
     function chageImg() {
-        $('#verImg').attr('src', '/bankQuery/gd/verify_code.jpg?' + Math.floor(Math.random() * 1000000));
+        $('#verImg').attr('src', '/bankQuery/zs/verify_code.jpg?' + Math.floor(Math.random() * 1000000));
     }
 
 </script>
 <center>
     <h2 style="color:deepskyblue">办卡进度</h2>
     <span style="color: red" th:if="${error}" th:text="${error}"></span>
-    <form class="form-horizontal" role="form" action="#" th:action="@{/bankQuery/gd/query}" th:object="${user}"
+    <form class="form-horizontal" role="form" action="#" th:action="@{/bankQuery/zs/query}" th:object="${user}"
           method="post">
-        <div class="form-group" style="width:34rem">
-            <div>
-                <label for="name" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline">姓
-                    名：</label>
-                <input th:field="*{name}" style="width: 20rem; align-self:self-start;display: inline" id="name"
-                       type="text" maxlength="18" class="form-control"/>
-            </div>
-        </div>
+
         <div class="form-group" style="width:34rem">
             <div>
                 <label for="card_id_type" style="width: 10rem;text-align: right"
                        class="col-sm-4 control-label form-inline">证件类型：</label>
                 <select id="card_id_type" style="width: 20rem;display: inline" th:field="*{cardIdType}"
                         class="form-control">
-                    <option value="A">境内居民身份证</option>
-                    <option value="B">外籍人士护照</option>
-                    <option value="C">军人证</option>
-                    <option value="G">武警证</option>
-                    <option value="D">港澳居民往来内地通行证</option>
-                    <option value="E">台湾居民来往大陆通行证</option>
-                    <option value="M">港澳居民居住证</option>
-                    <option value="T">台湾居民居住证</option>
-                    <option value="F">其他</option>
+                    <option value="01">身份证</option>
+                    <option value="02">护照</option>
+                    <option value="03">其他</option>
                 </select>
             </div>
         </div>
@@ -164,16 +151,16 @@
             <div>
                 <label for="card_value" style="width: 10rem;text-align: right"
                        class="col-sm-4 control-label form-inline">证件号码：</label>
-                <input  th:field="*{idNo}" id="card_value" style="width: 20rem;display: inline" type="text"
+                <input th:field="*{idNo}" id="card_value" style="width: 20rem;display: inline" type="text"
                        maxlength="18" class="form-control"/>
             </div>
         </div>
         <div class="form-group" style="width:34rem">
             <div>
-                <label for="ver_code" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline">验证码：</label>
-                <input id="ver_code" type="text" style="width: 13rem;display: inline" maxlength="4"
-                       th:field="*{verCode}" class="form-control"/>
-                <img src="/bankQuery/gd/verify_code.jpg" onclick="chageImg()" id="verImg"/>
+                <label for="card_value" style="width: 10rem;text-align: right"
+                       class="col-sm-4 control-label form-inline">手机号码：</label>
+                <input th:field="*{tel}" id="tel" style="width: 20rem;display: inline" type="text"
+                       maxlength="11" class="form-control"/>
             </div>
         </div>
         <div class="form-group" style="width:34rem">
@@ -183,7 +170,8 @@
                        maxlength="6" class="form-control"/>
                 <input type="button" style="width: 8rem;display: inline" id="activeBtn" class="btn btn-default" value="发送"/>
             </div>
-            <label style="color: red" id="actErr" > </label>
+            <br/>
+            <label style="color: red" id="actErr"></label>
         </div>
         <div class="form-group">
             <div>

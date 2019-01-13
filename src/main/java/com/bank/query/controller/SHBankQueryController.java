@@ -128,7 +128,7 @@ public class SHBankQueryController {
         ResponseEntity<String> exchange = restTemplate.exchange("https://ebanks.bankofshanghai.com/pweb/LogoutCreditApplyProQry.do", HttpMethod.POST, requestEntity, String.class);
         //log.info(exchange.getBody());
         if (exchange.getStatusCode().value() != HttpStatus.OK.value()){
-            model.addAttribute("user", new User());
+            model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
             return "shQuery";
         }
@@ -147,13 +147,13 @@ public class SHBankQueryController {
                 results.add(result);
             });
         }catch (Exception e){
-            log.error("解析网页出错",e);
-            model.addAttribute("user", new User());
+            //log.error("解析网页出错",e);
+            model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
             return "shQuery";
         }
 
-        log.info(results.toString());
+        //log.info(results.toString());
         model.addAttribute("results",results);
         return "result";
     }
