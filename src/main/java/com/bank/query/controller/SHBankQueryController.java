@@ -26,8 +26,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 @Controller
@@ -168,10 +170,10 @@ public class SHBankQueryController {
     }
 
 //    public static void main(String[] args) {
-//        String s = "&#37;E5&#37;A7&#37;93&#37;E5&#37;90&#37;8D&#37;E5&#37;A4&#37;AA&#37;E7&#37;9F&#37;AD&#37;21";
-//        byte[] b = s.getBytes();
+//        String s = "320882199510270013";
+//        byte[] b = Base64.getEncoder().encode(s.getBytes());
 //        System.out.println(b.toString());
-//        String u = URLDecoder.decode(b.toString());
-//        System.out.println(u);
+//        //String u = URLDecoder.decode(b.toString());
+//        //System.out.println(u);
 //    }
 }

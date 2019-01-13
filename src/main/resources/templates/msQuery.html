@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <title>光大银行信用卡办理进度查询</title>
+    <title>民生银行信用卡办理进度查询</title>
     <script src="../../webjars/jquery/3.2.1/jquery.js"></script>
     <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -73,7 +73,7 @@
 
         function getActPwd() {
 
-            var p_url = '/bankQuery/gd/actPwd';
+            var p_url = '/bankQuery/ms/actPwd';
             var card_value = $('#card_value').val();
             var ver_code = $('#ver_code').val();
             var idType = $('#card_id_type').val();
@@ -93,7 +93,7 @@
                     if(!msgobj.flag){
                         actErr.html("信息填写不正确！");
                         actErr.show();
-                    }else if(msgobj.rbody.flag !=0){
+                    }else if(msgobj.rbody.retCode !="0000"){
                         actErr.html("信息填写不正确！");
                         actErr.show();
                     }
@@ -125,38 +125,30 @@
     });
 
     function chageImg() {
-        $('#verImg').attr('src', '/bankQuery/gd/verify_code.jpg?' + Math.floor(Math.random() * 1000000));
+        $('#verImg').attr('src', '/bankQuery/ms/verify_code.jpg?' + Math.floor(Math.random() * 1000000));
     }
 
 </script>
 <center>
     <h2 style="color:deepskyblue">办卡进度</h2>
     <span style="color: red" th:if="${error}" th:text="${error}"></span>
-    <form class="form-horizontal" role="form" action="#" th:action="@{/bankQuery/gd/query}" th:object="${user}"
+    <form class="form-horizontal" role="form" action="#" th:action="@{/bankQuery/ms/query}" th:object="${user}"
           method="post">
-        <div class="form-group" style="width:34rem">
-            <div>
-                <label for="name" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline">姓
-                    名：</label>
-                <input th:field="*{name}" style="width: 20rem; align-self:self-start;display: inline" id="name"
-                       type="text" maxlength="18" class="form-control"/>
-            </div>
-        </div>
+
         <div class="form-group" style="width:34rem">
             <div>
                 <label for="card_id_type" style="width: 10rem;text-align: right"
                        class="col-sm-4 control-label form-inline">证件类型：</label>
                 <select id="card_id_type" style="width: 20rem;display: inline" th:field="*{cardIdType}"
                         class="form-control">
-                    <option value="A">境内居民身份证</option>
-                    <option value="B">外籍人士护照</option>
-                    <option value="C">军人证</option>
-                    <option value="G">武警证</option>
-                    <option value="D">港澳居民往来内地通行证</option>
-                    <option value="E">台湾居民来往大陆通行证</option>
-                    <option value="M">港澳居民居住证</option>
-                    <option value="T">台湾居民居住证</option>
-                    <option value="F">其他</option>
+                    <option value="01">身份证</option>
+                    <option value="03">军官证</option>
+                    <option value="12">中国护照</option>
+                    <option value="13">外国护照</option>
+                    <option value="14">香港通行证</option>
+                    <option value="15">澳门通行证</option>
+                    <option value="16">台湾通行证</option>
+                    <option value="20">其他</option>
                 </select>
             </div>
         </div>
@@ -173,7 +165,7 @@
                 <label for="ver_code" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline">验证码：</label>
                 <input id="ver_code" type="text" style="width: 13rem;display: inline" maxlength="4"
                        th:field="*{verCode}" class="form-control"/>
-                <img src="/bankQuery/gd/verify_code.jpg" onclick="chageImg()" id="verImg"/>
+                <img src="/bankQuery/ms/verify_code.jpg" onclick="chageImg()" id="verImg"/>
             </div>
         </div>
         <div class="form-group" style="width:34rem">
