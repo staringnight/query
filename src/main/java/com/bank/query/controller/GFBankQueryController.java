@@ -38,7 +38,7 @@ public class GFBankQueryController {
     private RestTemplate restTemplate;
 
     @RequestMapping("")
-    public String guangda(HttpServletRequest request, HttpServletResponse response, Model model) {
+    public String guangfa(HttpServletRequest request, HttpServletResponse response, Model model) {
         ResponseEntity exchange = restTemplate.getForEntity("https://xyk.cebbank.com/home/usr/logsyn.htm?1939680", Object.class);
         HttpHeaders headers = exchange.getHeaders();
         String set_cookie = headers.getFirst(HttpHeaders.SET_COOKIE);
