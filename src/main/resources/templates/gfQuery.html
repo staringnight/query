@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>广发银行信用卡办理进度查询</title>
+    <script src="../../webjars/jquery/3.2.1/jquery.js"></script>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<script>
+
+    $(function () {
+        var btn = $("#activeBtn");
+        monitor(btn);
+        //点击click
+
+
+        //防止页面刷新倒计时失效
+        /**
+         *
+         * @param {Object} obj  获取验证码按钮
+         */
+        function monitor(obj) {
+            var LocalDelay = getLocalDelay();
+            var timeLine = parseInt((new Date().getTime() - LocalDelay.time) / 1000);
+            if (timeLine > LocalDelay.delay) {
+                //console.log("过期");
+            } else {
+                _delay = LocalDelay.delay - timeLine;
+                obj.text(_delay).addClass("btn-disabled");
+                var timer = setInterval(function () {
+                    if (_delay > 1) {
+                        _delay--;
+                        obj.text(_delay);
+                        setLocalDelay(_delay);
+                    } else {
+                        clearInterval(timer);
+                        obj.text("获取验证码").removeClass("btn-disabled");
+                    }
+                }, 1000);
+            }
+        };
+
+        //倒计时效果
+        /**
+         *
+         * @param {Object} obj 获取验证码按钮
+         * @param {Function} callback  获取验证码接口函数
+         */
+        function countDown(obj, callback) {
+            if (obj.val() == "发送") {
+                var _delay = 60;
+                var delay = _delay;
+                obj.val(_delay).attr("disabled", true);
+                var timer = setInterval(function () {
+                    if (delay > 1) {
+                        delay--;
+                        obj.val(delay);
+                        setLocalDelay(delay);
+                    } else {
+                        clearInterval(timer);
+                        obj.val("发送").removeAttr("disabled");
+                    }
+                }, 1000);
+
+                callback();
+            } else {
+                return false;
+            }
+        }
+
+        function getActPwd() {
+
+            var p_url = '/bankQuery/gf/actPwd';
+            var card_value = $('#card_value').val();
+            var ver_code = $('#ver_code').val();
+            var idType = $('#card_id_type').val();
+            var actErr = $("#actErr");
+            if (card_value == "" || ver_code == "" || idType == "") {
+                actErr.val("请先填写信息！");
+                actErr.show();
+            } else {
+                actErr.hide();
+            }
+            $.ajax({
+                type: "POST",
+                url: p_url,
+                crossDomain: true,
+                xhrFields: {
+                    withCredentials: true
+                },
+                data: "id_no=" + card_value + "&ver_code=" + ver_code + "&id_Type=" + idType,
+                success: function (msg) {
+                    if (msg != "200") {
+                        actErr.val("请先填写信息！");
+                        actErr.show();
+                    }
+                }
+            });
+            //}
+        }
+
+        //设置setLocalDelay
+        function setLocalDelay(delay) {
+            //location.href作为页面的唯一标识，可能一个项目中会有很多页面需要获取验证码。
+            localStorage.setItem("delay_" + location.href, delay);
+            localStorage.setItem("time_" + location.href, new Date().getTime());
+        }
+
+        //getLocalDelay()
+        function getLocalDelay() {
+            var LocalDelay = {};
+            LocalDelay.delay = localStorage.getItem("delay_" + location.href);
+            LocalDelay.time = localStorage.getItem("time_" + location.href);
+            return LocalDelay;
+        }
+
+        btn.click(function (event) {
+            //alert("haha");
+            //倒计时效果  getCode回调函数  获取验证码api
+            countDown(btn, getActPwd);
+        });
+    });
+
+    function chageImg() {
+        $('#verImg').attr('src', '/bankQuery/gd/verify_code.jpg?' + Math.floor(Math.random() * 1000000));
+    }
+
+</script>
+<center>
+    <h2 style="color:deepskyblue">办卡进度</h2>
+    <span style="color: red" th:if="${error}" th:text="${error}"></span>
+    <form class="form-horizontal" role="form" action="#" th:action="@{/bankQuery/gf/query}" th:object="${user}"
+          method="post">
+        <div class="form-group" style="width:34rem">
+            <div>
+                <label for="card_value" style="width: 10rem;text-align: right"
+                       class="col-sm-4 control-label form-inline">证件号码：</label>
+                <input th:field="*{idNo}" id="card_value" style="width: 20rem;display: inline" type="text"
+                       maxlength="18" class="form-control"/>
+            </div>
+        </div>
+        <div class="form-group" style="width:34rem">
+            <div>
+                <label for="card_value" style="width: 10rem;text-align: right"
+                       class="col-sm-4 control-label form-inline">手机号码：</label>
+                <input th:field="*{tel}" id="tel" style="width: 20rem;display: inline" type="text"
+                       maxlength="11" class="form-control"/>
+            </div>
+        </div>
+        <div class="form-group" style="width:34rem">
+            <div>
+                <label for="ver_code" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline">验证码：</label>
+                <input id="ver_code" type="text" style="width: 13rem;display: inline" maxlength="4"
+                       th:field="*{verCode}" class="form-control"/>
+                <img src="/bankQuery/gf/verify_code.jpg" onclick="chageImg()" id="verImg"/>
+            </div>
+        </div>
+        <div class="form-group" style="width:34rem">
+            <div>
+                <label for="actPwd" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline">动态密码：</label>
+                <input th:field="*{activityCode}" style="width: 12rem;display: inline" id="actPwd" type="text"
+                       maxlength="6" class="form-control"/>
+                <input type="button" style="width: 8rem;display: inline" id="activeBtn" class="btn btn-default"
+                       value="发送"/>
+            </div>
+            <span style="color: red" id="actErr" hidden="hidden"/>
+        </div>
+        <div class="form-group">
+            <div>
+                <button type="submit" style="width: 10rem" class="btn btn-primary" id="btn">查询</button>&nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="reset" style="width: 10rem" class="btn btn-warning" value="重置"/>
+            </div>
+        </div>
+    </form>
+</center>
+</body>
+</html>
