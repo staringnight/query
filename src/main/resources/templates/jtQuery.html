@@ -17,7 +17,7 @@
 <center>
     <h2 style="color:deepskyblue">办卡进度</h2>
 
-    <span th:if="${error}" th:text="${error}"></span>
+    <span style="color: red" th:if="${error}" th:text="${error}"></span>
     <form class="form-horizontal" role="form" action="#" th:action="@{/bankQuery/jt/query}" th:object="${user}"
           method="post">
 

@@ -72,15 +72,18 @@
         }
 
         function getActPwd() {
-            // $('#name_err').text('');
-            // $('#card_value_err').text('');
-            // $('#ver_code_err').text('');
-            // $('#activity_code_err').text('');
-            //if(checkSubmitFrom()){
+
             var p_url = '/bankQuery/gd/actPwd';
             var card_value = $('#card_value').val();
             var ver_code = $('#ver_code').val();
             var idType = $('#card_id_type').val();
+            var actErr = $("#actErr");
+            if(card_value == "" || ver_code =="" || idType == ""){
+                actErr.val("请先填写信息！");
+                actErr.show();
+            }else {
+                actErr.hide();
+            }
             $.ajax({
                 type: "POST",
                 url: p_url,
@@ -90,8 +93,10 @@
                 },
                 data: "id_no=" + card_value + "&ver_code=" + ver_code + "&id_Type=" + idType,
                 success: function (msg) {
-                    var obj = jQuery.parseJSON(msg);
-                    //smsPwdTip(obj);
+                    if(msg!="200"){
+                        actErr.val("请先填写信息！");
+                        actErr.show();
+                    }
                 }
             });
             //}
@@ -126,7 +131,7 @@
 </script>
 <center>
     <h2 style="color:deepskyblue">办卡进度</h2>
-    <span th:if="${error}" th:text="${error}"></span>
+    <span style="color: red" th:if="${error}" th:text="${error}"></span>
     <form class="form-horizontal" role="form" action="#" th:action="@{/bankQuery/gd/query}" th:object="${user}"
           method="post">
         <div class="form-group" style="width:34rem">
@@ -178,6 +183,7 @@
                        maxlength="6" class="form-control"/>
                 <input type="button" style="width: 8rem;display: inline" id="activeBtn" class="btn btn-default" value="发送"/>
             </div>
+            <span style="color: red" id="actErr" hidden="hidden"/>
         </div>
         <div class="form-group">
             <div>

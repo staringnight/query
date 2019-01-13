@@ -120,13 +120,13 @@ public class PFBankQueryController {
         ResponseEntity<String> exchange = restTemplate.exchange("https://www.spdbccc.com.cn/spdb/cupd/applyProgress.do?method=query", HttpMethod.POST, requestEntity, String.class);
         //log.info(exchange.getBody());
         if (exchange.getStatusCode().value() != HttpStatus.OK.value()){
-            model.addAttribute("user", new User());
+            model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
             return "pfQuery";
         }
-        Document doc = Jsoup.parse(exchange.getBody());
         List<Result> results = new ArrayList<>();
         try {
+            Document doc = Jsoup.parse(exchange.getBody());
             Elements elements = doc.getElementsByClass("searchconc").get(0).getElementsByTag("table").get(0).getElementsByTag("tr");
 
             elements.stream().skip(1).forEach(element -> {
@@ -139,13 +139,13 @@ public class PFBankQueryController {
                 results.add(result);
             });
         }catch (Exception e){
-            log.error("解析网页出错",e);
-            model.addAttribute("user", new User());
+            //log.error("解析网页出错"); 用户填写出错
+            model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
             return "pfQuery";
         }
 
-        log.info(results.toString());
+        //log.info(results.toString());
         model.addAttribute("results",results);
         return "result";
     }

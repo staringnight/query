@@ -81,7 +81,7 @@ public class GDBankQueryController {
             });
 
         }
-        return exchange.getBody();
+        return exchange.getStatusCode().toString();
     }
 
     @RequestMapping("/verify_code.jpg")
@@ -152,23 +152,30 @@ public class GDBankQueryController {
         ResponseEntity<String> exchange = restTemplate.exchange("https://xyk.cebbank.com/home/fz/card-app-status-query.htm", HttpMethod.POST, requestEntity, String.class);
         //log.info(exchange.getBody());
         if (exchange.getStatusCode().value() != HttpStatus.OK.value()){
-            model.addAttribute("user", new User());
+            model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
             return "gdQuery";
         }
-        Document doc = Jsoup.parse(exchange.getBody());
-        Elements elements = doc.getElementsByClass("borderWrap2").get(0).getElementsByTag("table").get(0).getElementsByTag("tr");
         List<Result> results = new ArrayList<>();
-        elements.stream().skip(1).forEach(element -> {
-            Elements e = element.getElementsByTag("td");
-            Result result = Result.builder()
+        try {
+            Document doc = Jsoup.parse(exchange.getBody());
+            Elements elements = doc.getElementsByClass("borderWrap2").get(0).getElementsByTag("table").get(0).getElementsByTag("tr");
+
+            elements.stream().skip(1).forEach(element -> {
+                Elements e = element.getElementsByTag("td");
+                    Result result = Result.builder()
                     .cardType(e.get(1).text().trim())
                     .date(e.get(3).text().trim())
                     .state(e.get(4).text().trim())
                     .build();
-            results.add(result);
-        });
-        log.info(results.toString());
+                    results.add(result);
+            });
+        }catch (Exception e){
+            model.addAttribute("user", user);
+            model.addAttribute("error", "信息有误，请重试");
+            return "gdQuery";
+        }
+       // log.info(results.toString());
         model.addAttribute("results",results);
         return "result";
     }
