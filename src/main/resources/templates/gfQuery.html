@@ -12,6 +12,7 @@
 <script>
 
     $(function () {
+        var operationKey;
         var btn = $("#activeBtn");
         monitor(btn);
         //点击click
@@ -76,9 +77,9 @@
             var p_url = '/bankQuery/gf/actPwd';
             var card_value = $('#card_value').val();
             var ver_code = $('#ver_code').val();
-            var idType = $('#card_id_type').val();
+            var tel = $('#tel').val();
             var actErr = $("#actErr");
-            if (card_value == "" || ver_code == "" || idType == "") {
+            if (card_value == "" || ver_code == "" || tel == "") {
                 actErr.val("请先填写信息！");
                 actErr.show();
             } else {
@@ -91,11 +92,19 @@
                 xhrFields: {
                     withCredentials: true
                 },
-                data: "id_no=" + card_value + "&ver_code=" + ver_code + "&id_Type=" + idType,
+                data: "id_no=" + card_value + "&ver_code=" + ver_code + "&tel=" + tel,
                 success: function (msg) {
-                    if (msg != "200") {
-                        actErr.val("请先填写信息！");
+                    var msgobj = JSON.parse(msg);
+                    if (!msgobj.flag) {
+                        actErr.html("信息填写不正确！");
+
                         actErr.show();
+                    } else if (msgobj.rbody.ec != 0) {
+                        actErr.html("信息填写不正确！");
+                        actErr.show();
+                    } else {
+                        operationKey = msgobj.rbody.cd.operationKey;
+                        $("#skey").val(operationKey);
                     }
                 }
             });
@@ -155,7 +164,7 @@
                 <label for="ver_code" style="width: 10rem;text-align: right" class="col-sm-4 control-label form-inline">验证码：</label>
                 <input id="ver_code" type="text" style="width: 13rem;display: inline" maxlength="4"
                        th:field="*{verCode}" class="form-control"/>
-                <img src="/bankQuery/gf/verify_code.jpg" onclick="chageImg()" id="verImg"/>
+                <img style="width: 7rem" src="/bankQuery/gf/verify_code.jpg" onclick="chageImg()" id="verImg"/>
             </div>
         </div>
         <div class="form-group" style="width:34rem">
@@ -174,6 +183,7 @@
                 <input type="reset" style="width: 10rem" class="btn btn-warning" value="重置"/>
             </div>
         </div>
+        <input type="hidden" id="skey" th:field="*{skey}">
     </form>
 </center>
 </body>

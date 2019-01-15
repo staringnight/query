@@ -1,19 +1,14 @@
 package com.bank.query.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.bank.query.bean.Result;
 import com.bank.query.bean.User;
-import com.bank.query.bean.ZSResult;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,21 +22,19 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Controller
-@RequestMapping("bankQuery/zs")
+@RequestMapping("bankQuery/zx")
 @Slf4j
-public class ZSBankQueryController {
+public class ZXBankQueryController {
     @Autowired
     private RestTemplate restTemplate;
 
     @RequestMapping("")
-    public String zhaoshang(HttpServletResponse response, Model model) {
-        ResponseEntity exchange = restTemplate.getForEntity("https://ccclub.cmbchina.com/mca/MQuery.aspx", String.class);
+    public String zhongxin(HttpServletResponse response, Model model) {
+        ResponseEntity exchange = restTemplate.getForEntity("https://creditcard.ecitic.com/citiccard/online/firstPageManage.do?func=applyProcessQry", String.class);
         HttpHeaders headers1 = exchange.getHeaders();
         List<String> setCookie = headers1.get("Set-Cookie");
         //response.addCookie(set_cookie);
@@ -55,7 +48,7 @@ public class ZSBankQueryController {
         });
 
         model.addAttribute("user", new User());
-        return "zsQuery";
+        return "zxQuery";
     }
 
     @PostMapping("actPwd")
@@ -64,13 +57,13 @@ public class ZSBankQueryController {
         HttpHeaders headers = new HttpHeaders();
         String sc = request.getHeader("Cookie");
         headers.add("Cookie", sc);
-        headers.add("Host", "ccclub.cmbchina.com");
-        headers.add("Origin", "https://ccclub.cmbchina.com");
-        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-        headers.add("Referer", "https://ccclub.cmbchina.com/mca/MQuery.aspx");
-        String para = "{\"IDType\":\"" + id_Type + "\",\"IDNum\":\"" + id_no + "\",\"TelNo\":\"" + tel + "\"}";
+        headers.add("Host", "creditcard.ecitic.com");
+        headers.add("Origin", "https://creditcard.ecitic.com");
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.add("Referer", "https://creditcard.ecitic.com/citiccard/online/firstPageManage.do?func=applyProcessQry");
+        String para = "<request><checkQuerySchedule idType=\""+id_Type+"\" idNbr=\""+id_no+"\" mobilePhone=\""+tel+"\"/></request>";
         HttpEntity<String> requestEntity = new HttpEntity<String>(para, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange("https://ccclub.cmbchina.com/mca/Service/CWAService.asmx/PQS_SendSMSCode", HttpMethod.POST, requestEntity, String.class);
+        ResponseEntity<String> exchange = restTemplate.exchange("https://creditcard.ecitic.com/citiccard/online/newQuerySchedule.do?func=checkQuerySchedule&dom=<request><checkQuerySchedule idType=\""+id_Type+"\" idNbr=\""+id_no+"\" mobilePhone=\""+tel+"\"/></request>", HttpMethod.POST, requestEntity, String.class);
 
         HttpHeaders headers1 = exchange.getHeaders();
         List<String> setCookie = headers1.get("Set-Cookie");
@@ -90,7 +83,39 @@ public class ZSBankQueryController {
         if (exchange.getStatusCode().value() != HttpStatus.OK.value()) {
             flag = false;
         }
-        String result = "{\"flag\":" + flag + ",\"rbody\":" + exchange.getBody() + "}";
+        String result = "{\"flag\":" + flag + ",\"rbody\":" + exchange.getBody().substring(exchange.getBody().indexOf("retcode=")+8).split("/")[0] + "}";
+
+        List<String> setCookie1 = exchange.getHeaders().get("Set-Cookie");
+        //response.addCookie(set_cookie);
+        StringBuffer stringBuffer1 = new StringBuffer(sc) ;
+        if(setCookie1!=null) {
+            setCookie1.forEach(s -> {
+                String s1 = s.split(";")[0];
+                stringBuffer1.append(";" + s1);
+            });
+        }
+        sc = stringBuffer1.toString();
+        HttpHeaders headers2 = new HttpHeaders();
+        headers2.add("Cookie", sc);
+        headers2.add("Host", "creditcard.ecitic.com");
+        headers2.add("Origin", "https://creditcard.ecitic.com");
+        headers2.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers2.add("Referer", "https://creditcard.ecitic.com/citiccard/online/firstPageManage.do?func=applyProcessQry");
+        String para1 = "<request/>";
+        HttpEntity<String> requestEntity1 = new HttpEntity<String>(para1, headers2);
+        ResponseEntity<String> exchange1 = restTemplate.exchange("https://creditcard.ecitic.com/citiccard/online/firstPageManage.do?func=newSendMsg&dom=<request/>", HttpMethod.POST, requestEntity1, String.class);
+        List<String> setCookie2 = exchange1.getHeaders().get("Set-Cookie");
+        //response.addCookie(set_cookie);
+        if (setCookie2 != null) {
+            setCookie2.forEach(s -> {
+                String s1 = s.split(";")[0];
+                int index = s1.indexOf("=");
+                if (index > -1) {
+
+                    response.addCookie(new Cookie(s1.substring(0,index), s1.substring(index+1,s.length())));
+                }
+            });
+        }
         return result;
     }
 
@@ -100,20 +125,20 @@ public class ZSBankQueryController {
         HttpHeaders headers = new HttpHeaders();
         String sc = request.getHeader("Cookie");
         headers.add("Cookie", sc);
-        headers.add("Host", "ccclub.cmbchina.com");
-        headers.add("Origin", "https://ccclub.cmbchina.com");
-        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        headers.add("Host", "creditcard.ecitic.com");
+        headers.add("Origin", "https://creditcard.ecitic.com");
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.add("Referer", "https://creditcard.ecitic.com/citiccard/online/firstPageManage.do?func=applyProcessQry");
         headers.add("Pragma", "no-cache");
         headers.add("Cache-Control", "no-cache");
         headers.add("Connection", "keep-alive");
         headers.add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
 
-        headers.add("Referer", "https://ccclub.cmbchina.com/mca/MQuery.aspx");
-        String params = "{\"cardtype\":\"" + user.getCardIdType() + "\",\"cardid\":\"" + user.getIdNo() + "\",\"smscode\":\"" + user.getActivityCode() + "\"}";
+        String params = "<request><queryClass check_value=\""+user.getActivityCode()+"\"/></request>";
 
 
         HttpEntity<String> requestEntity = new HttpEntity<String>(params, headers);
-        ResponseEntity<String> exchange1 = restTemplate.exchange("https://ccclub.cmbchina.com/mca/Service/CWAService.asmx/PQS_QuerySchedule", HttpMethod.POST, requestEntity, String.class);
+        ResponseEntity<String> exchange1 = restTemplate.exchange("https://creditcard.ecitic.com/citiccard/online/firstPageManage.do?func=checkNewMsg&dom=<request><queryClass check_value=\""+user.getActivityCode()+"\"/></request>", HttpMethod.POST, requestEntity, String.class);
         //log.info(exchange.getBody());
         List<String> setCookie1 = exchange1.getHeaders().get("Set-Cookie");
         //response.addCookie(set_cookie);
@@ -143,27 +168,27 @@ public class ZSBankQueryController {
         if (exchange.getStatusCode().value() != HttpStatus.OK.value()) {
             model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
-            return "zsQuery";
+            return "zxQuery";
         }
         List<Result> results = new ArrayList<>();
         try {
             Document doc = Jsoup.parse(exchange.getBody());
             String elements = doc.getElementById("ctl00_ContentPlaceHolder1_hidresult").text().trim().replace("&quot;","\"");
-            List<ZSResult> zsResult = JSON.parseArray(elements,ZSResult.class);
-
-
-            zsResult.forEach(e -> {
-                Result result = Result.builder()
-                        .cardType(e.getCname())
-                        .date(e.getDate())
-                        .state(e.getMsg())
-                        .build();
-                results.add(result);
-            });
+//            List<zxResult> zxResult = JSON.parseArray(elements,zxResult.class);
+//
+//
+//            zxResult.forEach(e -> {
+//                Result result = Result.builder()
+//                        .cardType(e.getCname())
+//                        .date(e.getDate())
+//                        .state(e.getMsg())
+//                        .build();
+//                results.add(result);
+//            });
         } catch (Exception e) {
             model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
-            return "zsQuery";
+            return "zxQuery";
         }
         // log.info(results.toString());
         model.addAttribute("results", results);

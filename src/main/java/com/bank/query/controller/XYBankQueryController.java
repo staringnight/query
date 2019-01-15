@@ -40,14 +40,15 @@ public class XYBankQueryController {
     @RequestMapping("")
     public String xingye(HttpServletRequest request, HttpServletResponse response, Model model) {
         ResponseEntity exchange = restTemplate.getForEntity("https://personalbank.cib.com.cn/pers/creditCard/outer/querySchedule.do", String.class);
-        HttpHeaders headers = exchange.getHeaders();
-        String set_cookie = headers.getFirst(HttpHeaders.SET_COOKIE);
+        HttpHeaders headers1 = exchange.getHeaders();
+        List<String> setCookie = headers1.get("Set-Cookie");
         //response.addCookie(set_cookie);
-        String[] cookies = set_cookie.split(";");
-        Arrays.stream(cookies).forEach(s -> {
-            String[] c = s.split("=");
-            if (c.length == 2) {
-                response.addCookie(new Cookie(c[0].trim(), c[1].trim()));
+        setCookie.forEach(s -> {
+            String s1 = s.split(";")[0];
+            int index = s1.indexOf("=");
+            if (index > -1) {
+
+                response.addCookie(new Cookie(s1.substring(0,index), s1.substring(index+1)));
             }
         });
         model.addAttribute("user", new User());

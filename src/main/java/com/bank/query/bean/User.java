@@ -10,4 +10,5 @@ public class User {
     private String verCode;
     private String activityCode;
     private String tel;
+    private String skey;
 }

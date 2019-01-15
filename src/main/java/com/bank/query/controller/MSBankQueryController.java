@@ -1,5 +1,7 @@
 package com.bank.query.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.bank.query.bean.MSResult;
 import com.bank.query.bean.Result;
 import com.bank.query.bean.User;
 import lombok.extern.slf4j.Slf4j;
@@ -40,12 +42,13 @@ public class MSBankQueryController {
     @RequestMapping("")
     public String minsheng(HttpServletRequest request, HttpServletResponse response, Model model) {
         ResponseEntity exchange = restTemplate.getForEntity("https://creditcard.cmbc.com.cn/home/cn/web/business/account/progress/index.shtml", String.class);
-        HttpHeaders headers = exchange.getHeaders();
-        String set_cookie = headers.getFirst(HttpHeaders.SET_COOKIE);
+
+        HttpHeaders headers1 = exchange.getHeaders();
+        List<String> setCookie = headers1.get("Set-Cookie");
         //response.addCookie(set_cookie);
-        String[] cookies = set_cookie.split(";");
-        Arrays.stream(cookies).forEach(s -> {
-            String[] c = s.split("=");
+        setCookie.forEach(s -> {
+            String s1 =s.split(";")[0];
+            String[] c = s1.split("=");
             if (c.length == 2) {
                 response.addCookie(new Cookie(c[0].trim(), c[1].trim()));
             }
@@ -58,8 +61,8 @@ public class MSBankQueryController {
     @ResponseBody
     public String actPwd(HttpServletRequest request, HttpServletResponse response, String id_no, String ver_code, String id_Type) {
         HttpHeaders headers = new HttpHeaders();
-        String s = request.getHeader("Cookie");
-        headers.add("Cookie", s);
+        String sc = request.getHeader("Cookie");
+        headers.add("Cookie", sc);
         headers.add("Host", "creditcard.cmbc.com.cn");
         headers.add("Origin", "https://creditcard.cmbc.com.cn");
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -68,24 +71,23 @@ public class MSBankQueryController {
         HttpEntity<String> requestEntity = new HttpEntity<String>(para, headers);
         ResponseEntity<String> exchange = restTemplate.exchange("https://creditcard.cmbc.com.cn/fe/op_exchange_rate/verificationCode.gsp", HttpMethod.POST, requestEntity, String.class);
 
-        String set_cookie = exchange.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        HttpHeaders headers1 = exchange.getHeaders();
+        List<String> setCookie = headers1.get("Set-Cookie");
         //response.addCookie(set_cookie);
-        if (set_cookie!=null) {
-            String[] cookies = set_cookie.split(";");
-            Arrays.stream(cookies).forEach(cookiesString -> {
-                String[] c = cookiesString.split("=");
+        if(setCookie!=null) {
+            setCookie.forEach(s -> {
+                String s1 = s.split(";")[0];
+                String[] c = s1.split("=");
                 if (c.length == 2) {
-
                     response.addCookie(new Cookie(c[0].trim(), c[1].trim()));
                 }
             });
-
         }
         boolean flag = true;
         if (exchange.getStatusCode().value() != HttpStatus.OK.value()) {
             flag = false;
         }
-        String result = "{\"flag\":"+flag+",\"rbody\":"+exchange.getBody()+"}";
+        String result = "{\"flag\":" + flag + ",\"rbody\":" + exchange.getBody() + "}";
         return result;
     }
 
@@ -100,18 +102,18 @@ public class MSBankQueryController {
 
 
         HttpHeaders headers = new HttpHeaders();
-        String s = request.getHeader("Cookie");
-        headers.add("Cookie", s);
+        String sc = request.getHeader("Cookie");
+        headers.add("Cookie", sc);
         ResponseEntity<byte[]> result = restTemplate.exchange("https://creditcard.cmbc.com.cn/fe/opencard/safeCode.gsp", HttpMethod.GET, new HttpEntity<byte[]>(headers), byte[].class);
 
-        String set_cookie = result.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        HttpHeaders headers1 = result.getHeaders();
+        List<String> setCookie = headers1.get("Set-Cookie");
         //response.addCookie(set_cookie);
-        if (set_cookie!=null) {
-            String[] cookies = set_cookie.split(";");
-            Arrays.stream(cookies).forEach(cookiesString -> {
-                String[] c = cookiesString.split("=");
+        if(setCookie!=null) {
+            setCookie.forEach(s -> {
+                String s1 = s.split(";")[0];
+                String[] c = s1.split("=");
                 if (c.length == 2) {
-
                     response.addCookie(new Cookie(c[0].trim(), c[1].trim()));
                 }
             });
@@ -139,49 +141,76 @@ public class MSBankQueryController {
     public String query(@ModelAttribute User user, HttpServletRequest request, Model model) {
 
         HttpHeaders headers = new HttpHeaders();
-        String s = request.getHeader("Cookie");
-        headers.add("Cookie", s);
-        headers.add("Host", "xyk.cebbank.com");
-        headers.add("Origin", "https://xyk.cebbank.com");
+        String sc = request.getHeader("Cookie");
+        headers.add("Cookie", sc);
+        headers.add("Host", "creditcard.cmbc.com.cn");
+        headers.add("Origin", "https://creditcard.cmbc.com.cn");
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.add("Referer", "https://xyk.cebbank.com/home/fz/card-app-status.htm");
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("name", user.getName());
-        params.add("id_no", user.getIdNo());
-        params.add("ver_code", user.getVerCode());
-        params.add("card_id_Type", user.getCardIdType());
-        params.add("activity_code", user.getActivityCode());
+        headers.add("Pragma","no-cache");
+        headers.add("Referer", "https://creditcard.cmbc.com.cn/home/cn/web/business/account/progress/index.shtml");
+        headers.add("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
+        headers.add("X-Requested-With","XMLHttpRequest");
+        String params = "sKeyType="+user.getCardIdType()+"&sCustId="+user.getIdNo()+"&DYPW="+user.getActivityCode()+"&mar=1";
 
-
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<MultiValueMap<String, String>>(params, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange("https://xyk.cebbank.com/home/fz/card-app-status-query.htm", HttpMethod.POST, requestEntity, String.class);
+        HttpEntity<String> requestEntity = new HttpEntity<String>(params, headers);
+        ResponseEntity<String> exchange = restTemplate.exchange("https://creditcard.cmbc.com.cn/fe/op_exchange_rate/messageSubmit.gsp", HttpMethod.POST, requestEntity, String.class);
         //log.info(exchange.getBody());
-        if (exchange.getStatusCode().value() != HttpStatus.OK.value()){
+        if (exchange.getStatusCode().value() != HttpStatus.OK.value()) {
             model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
             return "msQuery";
         }
+        HttpHeaders headers1 = exchange.getHeaders();
+        List<String> setCookie = headers1.get("Set-Cookie");
+        //response.addCookie(set_cookie);
+        StringBuffer stringBuffer = new StringBuffer(sc) ;
+        if(setCookie!=null) {
+            setCookie.forEach(s -> {
+                String s1 = s.split(";")[0];
+                stringBuffer.append(";" + s1);
+            });
+        }
+        sc = stringBuffer.toString();
+        HttpHeaders headers2 = new HttpHeaders();
+        headers2.add("Cookie", sc);
+        headers2.add("Host", "creditcard.cmbc.com.cn");
+        headers2.add("Origin", "https://creditcard.cmbc.com.cn");
+        headers2.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers2.add("Pragma","no-cache");
+        headers2.add("Referer", "https://creditcard.cmbc.com.cn/home/cn/web/business/account/progress/index.shtml");
+        headers2.add("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
+        headers2.add("X-Requested-With","XMLHttpRequest");
+        HttpEntity<String> requestEntity1 = new HttpEntity<String>("COUT=1&FOUT=5&isVCard=undefined", headers2);
+        ResponseEntity<String> exchange1 = restTemplate.exchange("https://creditcard.cmbc.com.cn/fe/op_exchange_rate/cardProgressStep.gsp", HttpMethod.POST, requestEntity1, String.class);
+        //log.info(exchange.getBody());
+
+
         List<Result> results = new ArrayList<>();
         try {
-            Document doc = Jsoup.parse(exchange.getBody());
-            Elements elements = doc.getElementsByClass("borderWrap2").get(0).getElementsByTag("table").get(0).getElementsByTag("tr");
-
-            elements.stream().skip(1).forEach(element -> {
-                Elements e = element.getElementsByTag("td");
+            String code = exchange1.getBody();
+            code = code.replaceAll("\r|\n", "");
+            MSResult msResult = JSON.parseObject(code, MSResult.class);
+            if(msResult.getRetCode().equals("0000")){
+                msResult.getData().getList().forEach(e ->{
                     Result result = Result.builder()
-                    .cardType(e.get(1).text().trim())
-                    .date(e.get(3).text().trim())
-                    .state(e.get(4).text().trim())
-                    .build();
+                            .cardType(e.getAdd11())
+                            .date(e.getSLostDate())
+                            .state(e.getMscSrc())
+                            .build();
                     results.add(result);
-            });
-        }catch (Exception e){
+                });
+            } else {
+                model.addAttribute("user", user);
+                model.addAttribute("error", "信息有误，请重试");
+                return "msQuery";
+            }
+        } catch (Exception e) {
             model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
             return "msQuery";
         }
-       // log.info(results.toString());
-        model.addAttribute("results",results);
+        // log.info(results.toString());
+        model.addAttribute("results", results);
         return "result";
     }
 

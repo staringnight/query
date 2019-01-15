@@ -5,6 +5,7 @@ import com.bank.query.bean.User;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -55,7 +56,6 @@ public class JTBankQueryController {
     }
 
 
-
     @RequestMapping("/verify_code.jpg")
     @ResponseBody
     public String verCode(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -73,7 +73,7 @@ public class JTBankQueryController {
 
         String set_cookie = result.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
         //response.addCookie(set_cookie);
-        if (set_cookie!=null) {
+        if (set_cookie != null) {
             String[] cookies = set_cookie.split(";");
             Arrays.stream(cookies).forEach(cookiesString -> {
                 String[] c = cookiesString.split("=");
@@ -112,13 +112,13 @@ public class JTBankQueryController {
         headers.add("Referer", "https://creditcardapp.bankcomm.com/member/apply/status/preinquiry.html");
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("certNo", user.getIdNo());
-        params.add("vCode", user.getVerCode());
+        params.add("vcode", user.getVerCode());
 
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<MultiValueMap<String, String>>(params, headers);
         ResponseEntity<String> exchange = restTemplate.exchange("https://creditcardapp.bankcomm.com/member/apply/status/inquiry.html", HttpMethod.POST, requestEntity, String.class);
         //log.info(exchange.getBody());
-        if (exchange.getStatusCode().value() != HttpStatus.OK.value()){
+        if (exchange.getStatusCode().value() != HttpStatus.OK.value()) {
             model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
             return "jtQuery";
@@ -126,18 +126,14 @@ public class JTBankQueryController {
         List<Result> results = new ArrayList<>();
         try {
             Document doc = Jsoup.parse(exchange.getBody());
-            Elements elements = doc.getElementsByClass("searchconc").get(0).getElementsByTag("table").get(0).getElementsByTag("tr");
-
-            elements.stream().skip(1).forEach(element -> {
-                Elements e = element.getElementsByTag("td");
-                Result result = Result.builder()
-                        .cardType(e.get(0).text().trim())
-                        .date(e.get(1).text().trim())
-                        .state(e.get(2).text().trim())
-                        .build();
-                results.add(result);
-            });
-        }catch (Exception e){
+            Element element = doc.getElementsByClass("content-box").get(0);
+            String cardType = element.getElementsByTag("dd").get(0).text();
+            Result result = Result.builder()
+                    .cardType(cardType)
+                    .state(element.getElementsByTag("p").get(0).text())
+                    .build();
+            results.add(result);
+        } catch (Exception e) {
             //log.error("解析网页出错",e);
             model.addAttribute("user", user);
             model.addAttribute("error", "信息有误，请重试");
@@ -145,7 +141,7 @@ public class JTBankQueryController {
         }
 
         //log.info(results.toString());
-        model.addAttribute("results",results);
+        model.addAttribute("results", results);
         return "result";
     }
 
